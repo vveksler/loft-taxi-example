@@ -16,6 +16,7 @@ const createAppStore = () => {
         : (noop) => noop
     )
   )
+  
   const persistor = persistStore(store)
   sagaMiddleware.run(rootSaga)
 

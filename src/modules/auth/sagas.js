@@ -27,7 +27,7 @@ function* signUpSagaWorker(action) {
 
 function* signInSagaWorker(action) {
   try {
-    const { error, data: userData } = yield call(signInApi, action.payload)
+    const { data: userData } = yield call(signInApi, action.payload)
 
     if (userData.success) {
       const { data: cardData } = yield call(getProfileApi, userData.token)
@@ -35,8 +35,8 @@ function* signInSagaWorker(action) {
         yield put(profileSuccess(cardData))
 
       yield put(signInSuccess(userData))
-    } else if (error) {
-      yield put(signInFailure(error))
+    } else if (userData.error) {
+      yield put(signInFailure(userData))
     }
   } catch (error) {
     yield put(signInFailure(error))

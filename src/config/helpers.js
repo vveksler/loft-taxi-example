@@ -7,7 +7,7 @@ export const renderTextField = ({
   label,
   input,
   placeholder,
-  meta: { touched, invalid, error },
+  meta: { touched, error },
   ...custom
 }) => (
   <TextField

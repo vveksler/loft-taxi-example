@@ -132,75 +132,74 @@ const Profile = () => {
               <Typography variant="h4">Профиль</Typography>
               <Typography>Способ оплаты</Typography>
             </Box>
-            )
-            {updated ? (
-              renderAlert()
-            ) : (
-              <form onSubmit={handleSubmit}>
-                <Box className={classes.cardsContainer}>
-                  <Paper className={classes.card}>
-                    <MCIcon />
-                    <TextField
-                      value={card.cardNumber}
-                      onChange={handleChange}
-                      label="Номер карты:"
-                      name="cardNumber"
+            <form onSubmit={handleSubmit}>
+              <Box className={classes.cardsContainer}>
+                <Paper className={classes.card}>
+                  <MCIcon />
+                  <TextField
+                    value={card.cardNumber}
+                    onChange={handleChange}
+                    label="Номер карты:"
+                    name="cardNumber"
+                    required
+                    fullWidth
+                  />
+                  <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                    <DatePicker
+                      onChange={handleDateChange}
+                      label="Срок действия:"
+                      placeholder="12/21"
+                      name="expiryDate"
+                      views={['year', 'month']}
+                      format="MM/yy"
+                      value={card.expiryDate ? card.expiryDate : null}
+                      disablePast
+                      disableToolbar
+                      required
                       fullWidth
                     />
-                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                      <DatePicker
-                        onChange={handleDateChange}
-                        label="Срок действия:"
-                        placeholder="12/21"
-                        name="expiryDate"
-                        views={['year', 'month']}
-                        format="MM/yy"
-                        value={card.expiryDate ? card.expiryDate : null}
-                        disablePast
-                        disableToolbar
-                        fullWidth
-                      />
-                    </MuiPickersUtilsProvider>
-                  </Paper>
-                  <Paper className={classes.card}>
-                    <TextField
-                      value={card.cardName}
-                      onChange={handleChange}
-                      label="Имя владельца:"
-                      name="cardName"
-                      fullWidth
-                    />
-                    <TextField
-                      value={card.cvc}
-                      onChange={handleChange}
-                      label="CVC"
-                      name="cvc"
-                      fullWidth
-                    />
-                  </Paper>
-                </Box>
-                <Box className={classes.buttonContainer}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                  >
-                    Сохранить
-                  </Button>
-                  <Button
-                    className={classes.resetButton}
-                    onClick={() => dispatch(profileClear())}
-                    type="reset"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                  >
-                    Очистить
-                  </Button>
-                </Box>
-              </form>
-            )}
+                  </MuiPickersUtilsProvider>
+                </Paper>
+                <Paper className={classes.card}>
+                  <TextField
+                    value={card.cardName}
+                    onChange={handleChange}
+                    label="Имя владельца:"
+                    name="cardName"
+                    required
+                    fullWidth
+                  />
+                  <TextField
+                    value={card.cvc}
+                    onChange={handleChange}
+                    label="CVC"
+                    name="cvc"
+                    required
+                    fullWidth
+                  />
+                </Paper>
+              </Box>
+              <Box className={classes.buttonContainer}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                >
+                  Сохранить
+                </Button>
+                <Button
+                  className={classes.resetButton}
+                  onClick={() => dispatch(profileClear())}
+                  type="reset"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                >
+                  Очистить
+                </Button>
+              </Box>
+            </form>
           </Container>
         </Paper>
       </Container>
