@@ -1,28 +1,34 @@
 import React, { useState } from 'react'
 import { Link as RouteLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { Redirect } from 'react-router-dom'
 import { makeStyles } from '@material-ui/core/styles'
 import {
   Container,
   Grid,
-  Paper,
   Typography,
   Link,
   TextField,
   Box,
-  Button
+  Button,
+  Paper
 } from '@material-ui/core/'
-
-import Wrapper from 'components/common/Wrapper'
-import {
-  getIsLoggedIn,
-  getError,
-  getLoading,
-  signUpRequest
-} from 'modules/auth'
+import { Logo } from 'loft-taxi-mui-theme'
+import { getError, getLoading, signUpRequest } from 'modules/auth'
 
 const useStyle = makeStyles(() => ({
+  container: {
+    maxWidth: '1000px',
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  logo: {
+    width: '420px',
+    display: 'flex',
+    justifyContent: 'center'
+  },
   formWrap: {
     width: '500px',
     padding: '62px 40px'
@@ -47,7 +53,6 @@ const SignUpForm = () => {
     password: ''
   })
   const dispatch = useDispatch()
-  const isLoggedIn = useSelector(getIsLoggedIn)
   const error = useSelector(getError)
   const loading = useSelector(getLoading)
   const classes = useStyle()
@@ -65,10 +70,11 @@ const SignUpForm = () => {
     dispatch(signUpRequest(user))
   }
 
-  return isLoggedIn ? (
-    <Redirect to="/map" />
-  ) : (
-    <Wrapper>
+  return (
+    <Box className={classes.container}>
+      <Box className={classes.logo}>
+        <Logo white animated />
+      </Box>
       <Paper className={classes.formWrap}>
         <Container>
           <Typography variant="h4" component="h1">
@@ -150,7 +156,7 @@ const SignUpForm = () => {
           </form>
         </Container>
       </Paper>
-    </Wrapper>
+    </Box>
   )
 }
 

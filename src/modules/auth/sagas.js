@@ -8,11 +8,12 @@ import {
   signInFailure
 } from './actions'
 import { profileSuccess } from '../profile'
-import { signUp, signIn, getProfile } from 'config/api'
+import { signUpApi, signInApi } from './api'
+import { getProfileApi } from '../profile'
 
 function* signUpSagaWorker(action) {
   try {
-    const { error, data } = yield call(signUp, action.payload)
+    const { error, data } = yield call(signUpApi, action.payload)
 
     if (data.success) {
       yield put(signUpSuccess(data))
@@ -26,15 +27,16 @@ function* signUpSagaWorker(action) {
 
 function* signInSagaWorker(action) {
   try {
-    const { data } = yield call(signIn, action.payload)
+    const { error, data: userData } = yield call(signInApi, action.payload)
 
-    if (data.success) {
-      const response = yield call(getProfile, data.token)
+    if (userData.success) {
+      const { data: cardData } = yield call(getProfileApi, userData.token)
+      if (cardData.success !== false && cardData.id)
+        yield put(profileSuccess(cardData))
 
-      yield put(profileSuccess(response.data))
-      yield put(signInSuccess(data))
-    } else if (data) {
-      yield put(signInFailure(data))
+      yield put(signInSuccess(userData))
+    } else if (error) {
+      yield put(signInFailure(error))
     }
   } catch (error) {
     yield put(signInFailure(error))

@@ -5,6 +5,8 @@ import { spawn } from 'redux-saga/effects'
 
 import user, { authSaga } from './auth'
 import profile, { paymentSaga } from './profile'
+import addresses, { addressListSaga } from './addresses'
+import route, { routeSaga } from './route'
 
 const persistConfigAuth = {
   key: 'user',
@@ -20,10 +22,14 @@ const persistConfigProfile = {
 
 export default combineReducers({
   user: persistReducer(persistConfigAuth, user),
-  profile: persistReducer(persistConfigProfile, profile)
+  profile: persistReducer(persistConfigProfile, profile),
+  addresses,
+  route
 })
 
 export function* rootSaga() {
   yield spawn(authSaga)
   yield spawn(paymentSaga)
+  yield spawn(addressListSaga)
+  yield spawn(routeSaga)
 }
