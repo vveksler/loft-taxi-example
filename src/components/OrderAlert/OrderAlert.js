@@ -5,7 +5,7 @@ import Typography from '@material-ui/core/Typography'
 import Button from '@material-ui/core/Button'
 import Grid from '@material-ui/core/Grid'
 
-import { getCoordsError, setIsOrderMade } from 'modules/route'
+import { getCoordsError, clearRoutes } from 'modules/route'
 
 const useStyles = makeStyles(() => ({
   fieldAlign: {
@@ -23,6 +23,10 @@ const OrderAlert = () => {
   const classes = useStyles()
   const errorCoords = useSelector(getCoordsError)
   const dispatch = useDispatch()
+
+  const handleClick = () => {
+    dispatch(clearRoutes())
+  }
 
   return (
     <Grid container spacing={2}>
@@ -50,7 +54,7 @@ const OrderAlert = () => {
           variant="outlined"
           color="primary"
           component="button"
-          onClick={() => dispatch(setIsOrderMade(false))}
+          onClick={handleClick}
         >
           Make a new order
         </Button>

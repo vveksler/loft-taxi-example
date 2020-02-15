@@ -6,7 +6,4 @@ export const getCoords = createSelector(
   (state) => state.route.coords,
   (coords) => coords
 )
-export const getIsOrderMade = createSelector(
-  (state) => state.route.orderMade,
-  (orderMade) => orderMade
-)
+export const getIsOrderMade = state => !!getCoords(state)

@@ -4,7 +4,6 @@ import {
   fetchCoordsRequest,
   fetchCoordsSuccess,
   fetchCoordsFailure,
-  setIsOrderMade,
   clearRoutes
 } from './actions'
 
@@ -34,17 +33,8 @@ const error = handleActions(
   null
 )
 
-const orderMade = handleActions(
-  {
-    [setIsOrderMade]: (_state, action) => action.payload,
-    [clearRoutes]: () => false
-  },
-  false
-)
-
 export default combineReducers({
   coords,
   loading,
-  error,
-  orderMade
+  error
 })

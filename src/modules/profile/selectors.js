@@ -8,4 +8,8 @@ export const getLoader = createSelector(
 )
 export const getError = createSelector(getProfile, (profile) => profile.error)
 export const getIsCardFilled = (state) =>
-  Object.keys(state.profile.card).length > 0
+  state.profile.card &&
+  state.profile.card.cardNumber &&
+  state.profile.card.expiryDate &&
+  state.profile.card.cardName &&
+  state.profile.card.cvc

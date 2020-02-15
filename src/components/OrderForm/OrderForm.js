@@ -8,7 +8,7 @@ import Grid from '@material-ui/core/Grid'
 import MenuItem from '@material-ui/core/MenuItem'
 import CircularProgress from '@material-ui/core/CircularProgress'
 
-import { fetchCoordsRequest, setIsOrderMade } from 'modules/route'
+import { fetchCoordsRequest } from 'modules/route'
 import {
   fetchAddressesRequest,
   getIsLoading,
@@ -55,7 +55,6 @@ const OrderForm = () => {
     if (address1 && address2)
       dispatch(fetchCoordsRequest({ address1, address2 }))
 
-    dispatch(setIsOrderMade(true))
     setAddresses({
       address1: '',
       address2: ''

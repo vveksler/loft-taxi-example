@@ -13,9 +13,7 @@ import DateFnsUtils from '@date-io/date-fns'
 import { MuiPickersUtilsProvider, DatePicker } from '@material-ui/pickers'
 import { MCIcon } from 'loft-taxi-mui-theme'
 import Background from '../common/Background'
-import { getCard, profileRequest, profileClear } from 'modules/profile'
-import ProfileAlert from 'components/ProfileAlert'
-import { clearRoutes } from 'modules/route'
+import { getCard, profileRequest } from 'modules/profile'
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -65,29 +63,15 @@ const Profile = () => {
     expiryDate: '',
     cardName: ''
   })
-  const [updated, setUpdated] = useState(false)
 
   useEffect(() => {
-    if (Object.keys(cardFromStore).length) {
-      setCard({
-        cvc: cardFromStore.cvc,
-        cardNumber: cardFromStore.cardNumber,
-        expiryDate: cardFromStore.expiryDate,
-        cardName: cardFromStore.cardName
-      })
-    } else {
-      setCard({
-        cvc: '',
-        cardNumber: '',
-        expiryDate: '',
-        cardName: ''
-      })
-    }
+    setCard({
+      cvc: cardFromStore.cvc ? cardFromStore.cvc : '',
+      cardNumber: cardFromStore.cardNumber ? cardFromStore.cardNumber : '',
+      expiryDate: cardFromStore.expiryDate ? cardFromStore.expiryDate : '',
+      cardName: cardFromStore.cardName ? cardFromStore.cardName : ''
+    })
   }, [cardFromStore])
-
-  useEffect(() => {
-    dispatch(clearRoutes())
-  }, [dispatch])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -100,27 +84,11 @@ const Profile = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    setUpdated(true)
     dispatch(profileRequest(card))
   }
 
   const handleDateChange = (date) => {
     setCard({ ...card, expiryDate: date.toDateString() })
-  }
-
-  const renderAlert = () => {
-    return (
-      <>
-        <Paper className={classes.form}>
-          <ProfileAlert
-            header="Profile"
-            body="Billing information updated. Now you can order a taxi."
-            btnText="Go to map"
-            linkTo="/map"
-          />
-        </Paper>
-      </>
-    )
   }
 
   return (
@@ -190,7 +158,16 @@ const Profile = () => {
                 </Button>
                 <Button
                   className={classes.resetButton}
-                  onClick={() => dispatch(profileClear())}
+                  onClick={() =>
+                    dispatch(
+                      profileRequest({
+                        cvc: '',
+                        cardNumber: '',
+                        expiryDate: '',
+                        cardName: ''
+                      })
+                    )
+                  }
                   type="reset"
                   variant="contained"
                   color="primary"

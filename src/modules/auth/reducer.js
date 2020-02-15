@@ -8,13 +8,13 @@ import {
   logout
 } from './actions'
 
-const initialState = {
+export const initialState = {
   loading: false,
   token: null,
   error: null
 }
 
-export default function reducer(state = initialState, action) {
+export default function authReducer(state = initialState, action) {
   const { type, payload } = action
 
   switch (type) {

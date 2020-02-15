@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react'
-import { useSelector, shallowEqual } from 'react-redux'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import { makeStyles } from '@material-ui/core/styles'
 import mapboxgl from 'mapbox-gl'
-import { getCoords, getIsOrderMade } from 'modules/route'
+import { getCoords, clearRoutes } from 'modules/route'
+import { getIsCardFilled } from 'modules/profile'
 import OrderPage from 'components/OrderPage'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -15,23 +17,21 @@ const useStyles = makeStyles(() => ({
   }
 }))
 
-mapboxgl.accessToken =
-  'pk.eyJ1IjoidnZla3NsZXIiLCJhIjoiY2swNDIyY3k5MjBodzNjcHJwYXdiYnA1OSJ9.f_ikZnTIAUm1k_WEuudyCg'
-let map = null
-
 const Map = () => {
   const classes = useStyles()
-  const coords = useSelector(getCoords, shallowEqual)
-  const isOrderMade = useSelector(getIsOrderMade, shallowEqual)
+  const [map, setMap] = useState(null)
   const [mapState] = useState({
     lng: 30.27,
     lat: 60,
     zoom: 12
   })
-  const mapContainerRef = useRef(null)
+  const mapContainer = useRef(null)
+  const dispatch = useDispatch()
+  const coords = useSelector(getCoords)
+  const cardIsFilled = useSelector(getIsCardFilled)
 
-  const renderRoute = useMemo(
-    () => () => {
+  const renderRoute = useCallback(() => {
+    if (map) {
       map.addLayer({
         id: 'route',
         type: 'line',
@@ -57,35 +57,43 @@ const Map = () => {
       map.flyTo({
         center: coords[0]
       })
-    },
-    [coords]
-  )
-
-  useEffect(() => {
-    map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
-      center: [mapState.lng, mapState.lat],
-      zoom: mapState.zoom
-    })
-    return () => {
-      map.remove()
     }
-  }, [mapState])
+  }, [map, coords])
 
   useEffect(() => {
-    if (isOrderMade && map.getLayer('route')) {
+    mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_KEY
+    const initializeMap = ({ setMap, mapContainer }) => {
+      const map = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [mapState.lng, mapState.lat],
+        zoom: mapState.zoom
+      })
+
+      map.on('load', () => {
+        setMap(map)
+        map.resize()
+      })
+    }
+
+    if (!map) initializeMap({ setMap, mapContainer })
+  }, [map, mapState])
+
+  useEffect(() => {
+    if (!coords && map && map.getLayer('route')) {
       map.removeLayer('route')
       map.removeSource('route')
     }
 
-    if (isOrderMade && coords && coords.length > 0) {
+    if (coords && coords.length > 0) {
       renderRoute()
     }
-  }, [isOrderMade, coords, renderRoute])
+
+    if (!cardIsFilled && coords) dispatch(clearRoutes())
+  }, [renderRoute, map, coords, cardIsFilled, dispatch])
 
   return (
-    <div ref={mapContainerRef} className={classes.container}>
+    <div ref={mapContainer} className={classes.container}>
       <OrderPage />
     </div>
   )
