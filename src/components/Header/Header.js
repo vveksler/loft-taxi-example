@@ -6,12 +6,14 @@ import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
 import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
+import { clearRoutes } from 'modules/route'
 import { logout } from 'modules/auth'
 
 const Header = () => {
   const dispatch = useDispatch()
   const handleLogout = () => {
     dispatch(logout())
+    dispatch(clearRoutes())
   }
 
   return (

@@ -1,4 +1,5 @@
 import { put, call, takeLeading } from 'redux-saga/effects'
+import { startSubmit, stopSubmit } from 'redux-form'
 import {
   signUpRequest,
   signInRequest,
@@ -11,14 +12,22 @@ import { profileSuccess } from '../profile'
 import { signUpApi, signInApi } from './api'
 import { getProfileApi } from '../profile'
 
+function* fetchCardData(token) {
+  const { data: cardData } = yield call(getProfileApi, token)
+
+  if (cardData.success !== false && cardData.id)
+    yield put(profileSuccess(cardData))
+}
+
 function* signUpSagaWorker(action) {
   try {
-    const { error, data } = yield call(signUpApi, action.payload)
+    yield put(startSubmit('sign-up'))
+    const { data: userData } = yield call(signUpApi, action.payload)
 
-    if (data.success) {
-      yield put(signUpSuccess(data))
-    } else if (error) {
-      yield put(signUpFailure(error))
+    if (userData.success) {
+      yield put(signUpSuccess(userData))
+    } else if (userData.error) {
+      yield put(signUpFailure(userData.error))
     }
   } catch (error) {
     yield put(signUpFailure(error))
@@ -27,18 +36,30 @@ function* signUpSagaWorker(action) {
 
 function* signInSagaWorker(action) {
   try {
+    yield put(startSubmit('sign-in'))
     const { data: userData } = yield call(signInApi, action.payload)
 
     if (userData.success) {
-      const { data: cardData } = yield call(getProfileApi, userData.token)
-      if (cardData.success !== false && cardData.id)
-        yield put(profileSuccess(cardData))
-
+      yield call(fetchCardData, userData.token)
       yield put(signInSuccess(userData))
     } else if (userData.error) {
-      yield put(signInFailure(userData))
+      yield put(
+        stopSubmit('sign-in', {
+          email: 'Неверный email или пароль',
+          password: 'Неверный email или пароль',
+          _error: userData.error
+        })
+      )
+      yield put(signInFailure(userData.error))
     }
   } catch (error) {
+    yield put(
+      stopSubmit('sign-in', {
+        email: 'Ошибка сети',
+        password: 'Ошибка сети',
+        _error: error
+      })
+    )
     yield put(signInFailure(error))
   }
 }

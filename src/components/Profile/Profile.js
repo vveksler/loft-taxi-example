@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { useSelector, useDispatch } from 'react-redux'
 import { makeStyles } from '@material-ui/core/styles'
 import {
@@ -7,13 +8,16 @@ import {
   Box,
   Paper,
   TextField,
-  Button
+  Button,
+  CircularProgress,
+  Grid
 } from '@material-ui/core/'
 import DateFnsUtils from '@date-io/date-fns'
 import { MuiPickersUtilsProvider, DatePicker } from '@material-ui/pickers'
 import { MCIcon } from 'loft-taxi-mui-theme'
 import Background from '../common/Background'
-import { getCard, profileRequest } from 'modules/profile'
+import { getCard, profileRequest, getLoader } from 'modules/profile'
+import ProfileAlert from 'components/ProfileAlert'
 
 const useStyles = makeStyles(() => ({
   container: {
@@ -50,45 +54,48 @@ const useStyles = makeStyles(() => ({
   resetButton: {
     marginLeft: '1rem',
     backgroundColor: 'red'
+  },
+  loader: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 200
   }
 }))
 
-const Profile = () => {
+const Profile = ({ history: { location } }) => {
+  const { handleSubmit, control, reset, register, errors } = useForm()
   const classes = useStyles()
+  const [cardUpdated, setCardUpdated] = useState(false)
   const dispatch = useDispatch()
   const cardFromStore = useSelector(getCard)
-  const [card, setCard] = useState({
-    cvc: '',
-    cardNumber: '',
-    expiryDate: '',
-    cardName: ''
-  })
+  const loading = useSelector(getLoader)
+
+  const onSubmit = (data) => {
+    dispatch(profileRequest(data))
+    setCardUpdated(true)
+  }
 
   useEffect(() => {
-    setCard({
-      cvc: cardFromStore.cvc ? cardFromStore.cvc : '',
-      cardNumber: cardFromStore.cardNumber ? cardFromStore.cardNumber : '',
-      expiryDate: cardFromStore.expiryDate ? cardFromStore.expiryDate : '',
-      cardName: cardFromStore.cardName ? cardFromStore.cardName : ''
+    setCardUpdated(false)
+  }, [setCardUpdated, location.key])
+
+  const onReset = () => {
+    dispatch(
+      profileRequest({
+        cvc: '',
+        cardNumber: '',
+        expiryDate: '',
+        cardName: ''
+      })
+    )
+
+    reset({
+      cvc: '',
+      cardName: '',
+      cardNumber: '',
+      expiryDate: null
     })
-  }, [cardFromStore])
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-
-    setCard({
-      ...card,
-      [name]: value
-    })
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    dispatch(profileRequest(card))
-  }
-
-  const handleDateChange = (date) => {
-    setCard({ ...card, expiryDate: date.toDateString() })
   }
 
   return (
@@ -98,85 +105,148 @@ const Profile = () => {
           <Container className={classes.profileContainer}>
             <Box textAlign="center">
               <Typography variant="h4">Профиль</Typography>
-              <Typography>Способ оплаты</Typography>
+              {loading ? (
+                <Grid item xs={12} className={classes.loader}>
+                  <CircularProgress />
+                </Grid>
+              ) : !cardUpdated ? (
+                <>
+                  <Typography>Способ оплаты</Typography>
+                  <form onSubmit={handleSubmit(onSubmit)}>
+                    <Box className={classes.cardsContainer}>
+                      <Paper className={classes.card}>
+                        <MCIcon />
+                        <Controller
+                          as={TextField}
+                          onChange={([data]) => {
+                            const value = data.target.value
+                            const onlyNum = value.replace(/[^\d\s]/g, '').trim()
+
+                            return (
+                              onlyNum &&
+                              onlyNum
+                                .substring(0, 19)
+                                .match(/\d{1,4}/g)
+                                .join(' ')
+                            )
+                          }}
+                          helperText={
+                            errors.cardNumber && errors.cardNumber.message
+                          }
+                          label="Номер карты:"
+                          name="cardNumber"
+                          control={control}
+                          defaultValue={
+                            cardFromStore.cardNumber
+                              ? cardFromStore.cardNumber
+                              : ''
+                          }
+                          fullWidth
+                          inputRef={register({
+                            required: 'Введите номер карты',
+                            minLength: {
+                              value: 19,
+                              message: 'Неправильный номер карты'
+                            }
+                          })}
+                        />
+                        <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                          <Controller
+                            as={DatePicker}
+                            label="Срок действия:"
+                            placeholder="12/21"
+                            name="expiryDate"
+                            views={['year', 'month']}
+                            format="MM/yy"
+                            defaultValue={
+                              cardFromStore.expiryDate
+                                ? cardFromStore.expiryDate
+                                : null
+                            }
+                            control={control}
+                            disablePast
+                            disableToolbar
+                            fullWidth
+                          />
+                        </MuiPickersUtilsProvider>
+                      </Paper>
+                      <Paper className={classes.card}>
+                        <Controller
+                          as={TextField}
+                          inputRef={register({
+                            required: 'Введите имя',
+                            pattern: {
+                              value: /[A-Za-z]/,
+                              message: 'Не правильное имя'
+                            }
+                          })}
+                          helperText={
+                            errors.cardName && errors.cardName.message
+                          }
+                          control={control}
+                          defaultValue={
+                            cardFromStore.cardName ? cardFromStore.cardName : ''
+                          }
+                          label="Имя владельца:"
+                          name="cardName"
+                          fullWidth
+                        />
+                        <Controller
+                          as={TextField}
+                          inputRef={register({
+                            required: 'Введите 3 цифры',
+                            minLength: {
+                              value: 3,
+                              message: 'Слишком коротко'
+                            }
+                          })}
+                          onChange={([data]) => {
+                            const value = data.target.value
+
+                            return value.substr(0, 3)
+                          }}
+                          helperText={errors.cvc && errors.cvc.message}
+                          control={control}
+                          defaultValue={
+                            cardFromStore.cvc ? cardFromStore.cvc : ''
+                          }
+                          label="CVC"
+                          name="cvc"
+                          fullWidth
+                        />
+                      </Paper>
+                    </Box>
+                    <Box className={classes.buttonContainer}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                      >
+                        Сохранить
+                      </Button>
+                      <Button
+                        className={classes.resetButton}
+                        onClick={onReset}
+                        type="reset"
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                      >
+                        Очистить
+                      </Button>
+                    </Box>
+                  </form>
+                </>
+              ) : (
+                <ProfileAlert
+                  body="Данные карты были успешно обовлены"
+                  btnText="Перейти к карте"
+                  linkTo="/map"
+                  justify="center"
+                />
+              )}
             </Box>
-            <form onSubmit={handleSubmit}>
-              <Box className={classes.cardsContainer}>
-                <Paper className={classes.card}>
-                  <MCIcon />
-                  <TextField
-                    value={card.cardNumber}
-                    onChange={handleChange}
-                    label="Номер карты:"
-                    name="cardNumber"
-                    required
-                    fullWidth
-                  />
-                  <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                    <DatePicker
-                      onChange={handleDateChange}
-                      label="Срок действия:"
-                      placeholder="12/21"
-                      name="expiryDate"
-                      views={['year', 'month']}
-                      format="MM/yy"
-                      value={card.expiryDate ? card.expiryDate : null}
-                      disablePast
-                      disableToolbar
-                      required
-                      fullWidth
-                    />
-                  </MuiPickersUtilsProvider>
-                </Paper>
-                <Paper className={classes.card}>
-                  <TextField
-                    value={card.cardName}
-                    onChange={handleChange}
-                    label="Имя владельца:"
-                    name="cardName"
-                    required
-                    fullWidth
-                  />
-                  <TextField
-                    value={card.cvc}
-                    onChange={handleChange}
-                    label="CVC"
-                    name="cvc"
-                    required
-                    fullWidth
-                  />
-                </Paper>
-              </Box>
-              <Box className={classes.buttonContainer}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                >
-                  Сохранить
-                </Button>
-                <Button
-                  className={classes.resetButton}
-                  onClick={() =>
-                    dispatch(
-                      profileRequest({
-                        cvc: '',
-                        cardNumber: '',
-                        expiryDate: '',
-                        cardName: ''
-                      })
-                    )
-                  }
-                  type="reset"
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                >
-                  Очистить
-                </Button>
-              </Box>
-            </form>
           </Container>
         </Paper>
       </Container>

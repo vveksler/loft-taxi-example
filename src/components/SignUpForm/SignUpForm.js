@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { Field, reduxForm } from 'redux-form'
 import { Link as RouteLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { makeStyles } from '@material-ui/core/styles'
@@ -7,13 +8,13 @@ import {
   Grid,
   Typography,
   Link,
-  TextField,
   Box,
   Button,
   Paper
 } from '@material-ui/core/'
 import { Logo } from 'loft-taxi-mui-theme'
 import { getError, getLoading, signUpRequest } from 'modules/auth'
+import TextField from 'components/common/TextField'
 
 const useStyle = makeStyles(() => ({
   container: {
@@ -45,30 +46,11 @@ const useStyle = makeStyles(() => ({
   }
 }))
 
-const SignUpForm = () => {
-  const [user, setUser] = useState({
-    email: '',
-    name: '',
-    surname: '',
-    password: ''
-  })
-  const dispatch = useDispatch()
-  const error = useSelector(getError)
-  const loading = useSelector(getLoading)
+const SignUpForm = ({ handleSubmit }) => {
   const classes = useStyle()
-
-  const handleChange = ({ target: { value, name } }) => {
-    setUser({
-      ...user,
-      [name]: value
-    })
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    dispatch(signUpRequest(user))
-  }
+  const dispatch = useDispatch()
+  const loading = useSelector(getLoading)
+  const error = useSelector(getError)
 
   return (
     <Box className={classes.container}>
@@ -88,54 +70,48 @@ const SignUpForm = () => {
               </Link>
             </p>
           </div>
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={handleSubmit((values) => dispatch(signUpRequest(values)))}
+          >
             <Grid container spacing={3}>
               <Grid item xs={12}>
-                <TextField
+                <Field
+                  component={TextField}
                   className={classes.input}
-                  onChange={handleChange}
                   label="Адрес электронной почты"
                   type="email"
                   name="email"
                   fullWidth
-                  value={user.email}
-                  required
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
+                <Field
+                  component={TextField}
                   className={classes.input}
-                  onChange={handleChange}
                   label="Имя"
                   type="name"
                   name="name"
-                  value={user.name}
                   fullWidth
-                  required
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
+                <Field
+                  component={TextField}
                   className={classes.input}
-                  onChange={handleChange}
                   label="Фамилия"
                   type="surname"
                   name="surname"
-                  value={user.surname}
                   fullWidth
-                  required
                 />
               </Grid>
               <Grid item xs={12}>
-                <TextField
+                <Field
+                  component={TextField}
                   className={classes.input}
-                  onChange={handleChange}
                   label="Пароль"
                   type="password"
                   name="password"
                   fullWidth
-                  value={user.password}
-                  required
                 />
               </Grid>
             </Grid>
@@ -160,4 +136,21 @@ const SignUpForm = () => {
   )
 }
 
-export default SignUpForm
+const signUpSyncValidator = (values) => {
+  const errors = {}
+  if (!values.email) {
+    errors.email = 'Введите адресс почты'
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
+    errors.email = 'Адресс почты не правильный'
+  }
+  if (!values.name) errors.name = 'Введите имя'
+  if (!values.surname) errors.surname = 'Введите фамилию'
+  if (!values.password) errors.password = 'Введите пароль'
+  return errors
+}
+
+export default reduxForm({
+  // a unique name for the form
+  form: 'sign-up',
+  validate: signUpSyncValidator
+})(SignUpForm)

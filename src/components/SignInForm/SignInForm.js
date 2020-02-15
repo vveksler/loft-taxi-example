@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { Field, reduxForm } from 'redux-form'
 import { Link as RouteLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { makeStyles } from '@material-ui/core/styles'
@@ -7,13 +8,13 @@ import {
   Grid,
   Typography,
   Link,
-  TextField,
   Box,
   Button,
   Paper
 } from '@material-ui/core'
 import { Logo } from 'loft-taxi-mui-theme'
-import { getError, getLoading, signInRequest } from 'modules/auth'
+import { getLoading, signInRequest } from 'modules/auth'
+import TextField from 'components/common/TextField'
 
 const useStyle = makeStyles(() => ({
   container: {
@@ -43,28 +44,10 @@ const useStyle = makeStyles(() => ({
   }
 }))
 
-const SignInForm = () => {
-  const [user, setUser] = useState({
-    email: '',
-    password: ''
-  })
-  const dispatch = useDispatch()
-  const error = useSelector(getError)
-  const loading = useSelector(getLoading)
+const SignInForm = ({ handleSubmit }) => {
   const classes = useStyle()
-
-  const handleChange = ({ target: { value, name } }) => {
-    setUser({
-      ...user,
-      [name]: value
-    })
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    dispatch(signInRequest(user))
-  }
+  const dispatch = useDispatch()
+  const loading = useSelector(getLoading)
 
   return (
     <Box className={classes.container}>
@@ -72,62 +55,72 @@ const SignInForm = () => {
         <Logo white animated />
       </Box>
       <Paper className={classes.formWrap}>
-      <Container>
-        <Typography variant="h4" component="h1">
-          Войти
-        </Typography>
-        <div>
-          <p>
-            Новый пользователь?{' '}
-            <Link to="/signup" component={RouteLink}>
-              Зарегистрируйтесь
-            </Link>
-          </p>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                onChange={handleChange}
-                label="Имя пользователя"
-                type="email"
-                name="email"
-                fullWidth
-                value={user.email}
-                required
-              />
+        <Container>
+          <Typography variant="h4" component="h1">
+            Войти
+          </Typography>
+          <div>
+            <p>
+              Новый пользователь?{' '}
+              <Link to="/signup" component={RouteLink}>
+                Зарегистрируйтесь
+              </Link>
+            </p>
+          </div>
+          <form
+            onSubmit={handleSubmit((values) => dispatch(signInRequest(values)))}
+          >
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Field
+                  name="email"
+                  component={TextField}
+                  label="Имя пользователя"
+                  type="email"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Field
+                  name="password"
+                  component={TextField}
+                  label="Пароль"
+                  type="password"
+                  fullWidth
+                />
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                onChange={handleChange}
-                label="Пароль"
-                type="password"
-                name="password"
-                fullWidth
-                value={user.password}
-                required
-              />
-            </Grid>
-          </Grid>
-          <Box style={{ color: 'red', marginTop: '16px' }}>
-            {error && error}
-          </Box>
-          <Box className={classes.buttonContainer}>
-            <Button
-              disabled={loading ? true : false}
-              className={classes.button}
-              type="submit"
-              variant="contained"
-              color="primary"
-            >
-              Войти
-            </Button>
-          </Box>
-        </form>
-      </Container>
+            <Box className={classes.buttonContainer}>
+              <Button
+                disabled={loading ? true : false}
+                className={classes.button}
+                type="submit"
+                variant="contained"
+                color="primary"
+              >
+                Войти
+              </Button>
+            </Box>
+          </form>
+        </Container>
       </Paper>
     </Box>
   )
 }
 
-export default SignInForm
+const signInSyncValidator = (values) => {
+  const errors = {}
+  if (!values.email) {
+    errors.email = 'Please enter your email'
+  } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)) {
+    errors.email = 'It should be your e-mail'
+  }
+  if (!values.password) errors.password = 'Please enter your password'
+  return errors
+}
+
+export default reduxForm({
+  // a unique name for the form
+  form: 'sign-in',
+  validate: signInSyncValidator
+})(SignInForm)

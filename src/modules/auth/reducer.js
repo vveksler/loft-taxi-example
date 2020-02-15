@@ -28,7 +28,7 @@ export default function authReducer(state = initialState, action) {
 
     case signUpFailure.toString():
     case signInFailure.toString():
-      return { ...state, loading: false, error: payload.error }
+      return { ...state, loading: false, error: payload }
 
     case logout.toString():
       return { ...state, token: null }

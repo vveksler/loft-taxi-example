@@ -2,6 +2,7 @@ import { combineReducers } from 'redux'
 import { persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import { spawn } from 'redux-saga/effects'
+import { reducer as formReducer } from 'redux-form'
 
 import user, { authSaga } from './auth'
 import profile, { paymentSaga } from './profile'
@@ -24,7 +25,8 @@ export default combineReducers({
   user: persistReducer(persistConfigAuth, user),
   profile: persistReducer(persistConfigProfile, profile),
   addresses,
-  route
+  route,
+  form: formReducer
 })
 
 export function* rootSaga() {
