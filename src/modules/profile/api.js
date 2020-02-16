@@ -8,6 +8,7 @@ export const postProfileApi = async (data) => {
 
 export const getProfileApi = async (token) => {
   const response = await http.get(`/card?token=${token}`)
+  console.log('CARD data', response);
   
   return response
 }

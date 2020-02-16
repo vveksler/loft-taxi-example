@@ -1,5 +1,5 @@
 import axios from 'axios'
 
 export const http = axios.create({
-  baseURL: process.env.baseURL
+  baseURL: 'https://loft-taxi.glitch.me'
 })

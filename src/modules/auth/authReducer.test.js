@@ -16,25 +16,26 @@ describe('Тестирование authReducer', () => {
   it('should возвращать измененный стейт при экшене signUpRequest / signInRequest', () => {
     expect(
       testReducer(
-        { ...initialState, loading: false, error: 'test', token: 123 },
+        { ...initialState, loading: false, error: 'test' },
         {
           ...testAction,
           type: signInRequest.toString()
         }
       )
-    ).toEqual({ ...initialState, loading: true, error: null, token: 123 })
+    ).toEqual({ ...initialState, loading: true, error: null })
   })
 
   it('should возвращать измененный стейт при экшене signUpSuccess / signInSuccess', () => {
-    expect(
-      testReducer(
-        { ...initialState, loading: true, error: 'test', token: 123 },
-        {
-          ...testAction,
-          type: signInSuccess.toString()
-        }
-      )
-    ).toEqual({ ...initialState, loading: false, error: 'test', token: 'test' })
+    const prevState = { ...initialState, loading: true, token: 123 }
+    const nextState = {
+      ...testAction,
+      type: signInSuccess.toString()
+    }
+    expect(testReducer(prevState, nextState)).toEqual({
+      ...prevState,
+      loading: false,
+      token: 'test'
+    })
   })
 
   it('should возвращать измененный стейт при экшене signUpFailure / signInFailure', () => {

@@ -169,7 +169,7 @@ describe('Тестирования api', () => {
     expect(data.token).toBe(123)
     expect(mockAxios.post).toHaveBeenCalledTimes(1)
     expect(mockAxios.post).toHaveBeenCalledWith(
-      `${process.env.baseURL}/auth`,
+      'https://loft-taxi.glitch.me/auth',
       user
     )
   })
@@ -187,7 +187,7 @@ describe('Тестирования api', () => {
     expect(data.token).toBe(123)
     expect(mockAxios.post).toHaveBeenCalledTimes(2)
     expect(mockAxios.post).toHaveBeenCalledWith(
-      `${process.env.baseURL}/register`,
+      'https://loft-taxi.glitch.me/register',
       user
     )
   })

@@ -27,7 +27,7 @@ describe('Тестирование profile редюсера', () => {
   it('should возвращать измененный стейт при экшене profileRequest', () => {
     expect(
       testReducer(
-        { ...initialState, error: 'test' },
+        { ...initialState, loading: false, error: 'test' },
         {
           ...testAction,
           type: profileRequest.toString()
