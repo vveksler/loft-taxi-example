@@ -1,79 +1,61 @@
-import {
-  signUpRequest,
-  signUpSuccess,
-  signUpFailure,
-  signInSuccess,
-  signInFailure,
-  logout
-} from './actions'
-import { initialState } from './reducer'
-import authReducer from './reducer'
+import { signInRequest, signInSuccess, signInFailure, logout } from './actions'
+import testReducer, { initialState } from './reducer'
 
-describe('signUpRequest/signInRequest выставляет loading: true, error: null', () => {
-  const testState = authReducer(testInitialState, signUpRequest())
-
-  it('Возвращает стейт с правильными полями', () => {
-    expect(Object.keys(initialState)).toContain('loading', 'token', 'error')
-  })
-
-  it('loading должен быть true', () => {
-    expect(testState.loading).toBeTruthy()
-  })
-
-  it('error должено быть null', () => {
-    expect(testState.error).toEqual(null)
-  })
-})
-
-describe('signUpRequest/signInRequest выставляет token, loading: false', () => {
-  const testInitialState = {
-    loading: true,
-    token: 'test',
-    error: null
+describe('Тестирование authReducer', () => {
+  const testAction = {
+    type: 'TEST',
+    payload: {
+      token: 'test'
+    }
   }
-  const testState = authReducer(testInitialState, signUpRequest())
 
-  it('loading: false', () => {
-    expect(testState.loading).toBeFalsy()
+  it('should возвращать initialState по умолчанию', () => {
+    expect(testReducer(undefined, testAction)).toEqual(initialState)
   })
 
-  it('', () => {
-    expect(testState.token).toEqual('test')
+  it('should возвращать измененный стейт при экшене signUpRequest / signInRequest', () => {
+    expect(
+      testReducer(
+        { ...initialState, loading: false, error: 'test', token: 123 },
+        {
+          ...testAction,
+          type: signInRequest.toString()
+        }
+      )
+    ).toEqual({ ...initialState, loading: true, error: null, token: 123 })
   })
-})
 
-describe('LOGOUT makes store.isLoggedIn to be false', () => {
-  const initialState = authReducer(undefined, 'test')
-  const testState = authReducer(initialState, logout())
-
-  it('isLoggedIn in store must be false', () => {
-    expect(testState.isLoggedIn).toBeFalsy()
+  it('should возвращать измененный стейт при экшене signUpSuccess / signInSuccess', () => {
+    expect(
+      testReducer(
+        { ...initialState, loading: true, error: 'test', token: 123 },
+        {
+          ...testAction,
+          type: signInSuccess.toString()
+        }
+      )
+    ).toEqual({ ...initialState, loading: false, error: 'test', token: 'test' })
   })
-})
 
-/* describe("HANDLE_PROFILE_SUBMIT saves profile details to store", () => {
-  const initialState = authReducer(undefined, "test");
-  const testProfile1 = {
-    cardName: "test test",
-    cardNumber: "1111222233334444",
-    expDate: "01.20",
-    cvv: "123"
-  };
-  const testState = authReducer(
-    initialState,
-    handleProfileSubmit({ profile: { ...testProfile1 } })
-  );
+  it('should возвращать измененный стейт при экшене signUpFailure / signInFailure', () => {
+    expect(
+      testReducer(
+        { ...initialState, loading: true, error: null, token: 123 },
+        {
+          ...testAction,
+          type: signInFailure.toString(),
+          payload: 'error'
+        }
+      )
+    ).toEqual({ ...initialState, loading: false, error: 'error', token: 123 })
+  })
 
-  it("store.profile must have fields: cardName, cardNumber, expDate, cvv", () => {
-    expect(testState.profile).toStrictEqual(testProfile1);
-  });
-}); */
-
-describe('HANDLE_PROFILE_CLEAR profile to empty object in store', () => {
-  const initialState = authReducer(undefined, 'test')
-  const testState = authReducer(initialState, handleProfileClear())
-
-  it('store.profile must be empty object', () => {
-    expect(testState.profile).toStrictEqual({})
+  it('should возвращать измененный стейт при экшене logout', () => {
+    expect(
+      testReducer(
+        { ...initialState, token: 123 },
+        { ...testAction, type: logout.toString() }
+      )
+    ).toEqual({ ...initialState, token: null })
   })
 })

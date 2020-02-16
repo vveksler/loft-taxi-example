@@ -8,20 +8,18 @@ import {
   signUpFailure,
   signInFailure
 } from './actions'
-import { profileSuccess } from '../profile'
+import { profileSuccess, getProfileApi } from '../profile'
 import { signUpApi, signInApi } from './api'
-import { getProfileApi } from '../profile'
 
-function* fetchCardData(token) {
+export function* fetchCardData(token) {
   const { data: cardData } = yield call(getProfileApi, token)
 
   if (cardData.success !== false && cardData.id)
     yield put(profileSuccess(cardData))
 }
 
-function* signUpSagaWorker(action) {
+export function* signUpSagaWorker(action) {
   try {
-    yield put(startSubmit('sign-up'))
     const { data: userData } = yield call(signUpApi, action.payload)
 
     if (userData.success) {
@@ -34,7 +32,7 @@ function* signUpSagaWorker(action) {
   }
 }
 
-function* signInSagaWorker(action) {
+export function* signInSagaWorker(action) {
   try {
     yield put(startSubmit('sign-in'))
     const { data: userData } = yield call(signInApi, action.payload)

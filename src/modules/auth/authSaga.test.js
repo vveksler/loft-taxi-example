@@ -1,131 +1,194 @@
-import { startSubmit, stopSubmit } from "redux-form";
-import { put, call } from "redux-saga/effects";
+import { startSubmit, stopSubmit } from 'redux-form'
+import { put, call } from 'redux-saga/effects'
+import {
+  signUpSuccess,
+  signUpFailure,
+  signInSuccess,
+  signInFailure
+} from './actions'
+import { signUpApi, signInApi } from './api'
+import { signUpSagaWorker, signInSagaWorker, fetchCardData } from './sagas'
+import { getProfileApi, profileSuccess } from '../profile'
+import mockAxios from 'axios'
 
-import { login, auth } from "modules/Auth";
-import { checkAuth } from "config/api";
-import { authWorker, authPostWorker } from "./sagas";
-
-import mockAxios from "axios";
-
-describe("Testing for proper operation authPostWorker saga", () => {
+describe('Тестирование signUpSagaWorker саги', () => {
   const testAction = {
-    type: "TEST_AUTH",
-    payload: {
-      username: "test username",
-      password: "test password"
-    }
-  };
+    payload: 'test'
+  }
 
-  const gen = authPostWorker(testAction);
+  it('signUpSagaWorker c success true', () => {
+    const gen = signUpSagaWorker(testAction)
 
-  it("calls loadCoords with action.payload", () => {
-    expect(gen.next().value).toEqual(call(checkAuth, testAction.payload));
-  });
-
-  it("saga is finished", () => {
-    expect(gen.next().done).toEqual(true);
-  });
-});
-
-describe("authWorker with net error", () => {
-  const gen = authWorker(auth);
-  const testError = { error: "test error" };
-  const netErrorTemplate = {
-    userName: "Ошибка сети",
-    userPassword: "Ошибка сети",
-    _error: testError.error
-  };
-
-  it("puts startSubmit", () => {
-    expect(gen.next().value).toEqual(put(startSubmit("sign-in")));
-  });
-
-  it("calls authPostWorker", () => {
-    expect(gen.next().value).toEqual(call(authPostWorker, auth));
-  });
-
-  it("puts stopSubmit with error", () => {
-    expect(gen.next(testError).value).toEqual(
-      put(stopSubmit("sign-in", netErrorTemplate))
-    );
-  });
-
-  it("saga is finished", () => {
-    expect(gen.next().done).toEqual(true);
-  });
-});
-
-describe("authWorker with server error", () => {
-  const gen = authWorker(auth);
-  const testError = { data: { error: "test error" } };
-  const errorTemplate = {
-    userName: "Неверное имя пользователя или пароль",
-    userPassword: "Неверное имя пользователя или пароль",
-    _error: testError.data.error
-  };
-
-  it("puts startSubmit", () => {
-    expect(gen.next().value).toEqual(put(startSubmit("sign-in")));
-  });
-
-  it("calls authPostWorker", () => {
-    expect(gen.next().value).toEqual(call(authPostWorker, auth));
-  });
-
-  it("puts stopSubmit with error", () => {
-    expect(gen.next(testError).value).toEqual(
-      put(stopSubmit("sign-in", errorTemplate))
-    );
-  });
-
-  it("saga is finished", () => {
-    expect(gen.next().done).toEqual(true);
-  });
-});
-
-describe("authWorker with success", () => {
-  const gen = authWorker(auth);
-  const testSuccess = { data: { success: true } };
-
-  it("puts startSubmit", () => {
-    expect(gen.next().value).toEqual(put(startSubmit("sign-in")));
-  });
-
-  it("calls authPostWorker", () => {
-    expect(gen.next().value).toEqual(call(authPostWorker, auth));
-  });
-
-  it("puts stopSubmit with success", () => {
-    expect(gen.next(testSuccess).value).toEqual(put(login()));
-  });
-
-  it("saga is finished", () => {
-    expect(gen.next().done).toEqual(true);
-  });
-});
-
-describe("Axios api check", () => {
-  mockAxios.get.mockImplementationOnce(() =>
-    Promise.resolve({
-      success: true
-    })
-  );
-  const user = {
-    username: "test@test.com",
-    password: "123123"
-  };
-
-  it("Check checkAuth api is work", async () => {
-    const data = await checkAuth(user);
-
-    expect(data.success).toBe(true);
-    expect(mockAxios.get).toHaveBeenCalledTimes(1);
-    expect(mockAxios.get).toHaveBeenCalledWith(
-      "https://loft-taxi.glitch.me/auth?username=test@test.com&password=123123",
-      {
-        method: "GET",
-        mode: "cors"
+    expect(gen.next().value).toEqual(call(signUpApi, testAction.payload))
+    const responseData = {
+      data: {
+        success: true,
+        token: 'test'
       }
-    );
-  });
-});
+    }
+    expect(gen.next(responseData).value).toEqual(
+      put(signUpSuccess(responseData.data))
+    )
+    expect(gen.next().done).toEqual(true)
+  })
+
+  it('signUpSagaWorker c success false', () => {
+    const gen = signUpSagaWorker(testAction)
+
+    expect(gen.next().value).toEqual(call(signUpApi, testAction.payload))
+    const responseData = {
+      data: {
+        success: false,
+        error: 'test'
+      }
+    }
+    expect(gen.next(responseData).value).toEqual(
+      put(signUpFailure(responseData.data.error))
+    )
+    expect(gen.next().done).toEqual(true)
+  })
+
+  it('signUpSagaWorker заканчивает работу с проблемой сети', () => {
+    const error = new Error('error')
+    const gen = signUpSagaWorker(testAction)
+
+    expect(gen.next().value).toEqual(call(signUpApi, testAction.payload))
+
+    expect(gen.throw(error).value).toEqual(put(signUpFailure(error)))
+    expect(gen.next().done).toEqual(true)
+  })
+})
+
+describe('Тестирование signInSagaWorker саги', () => {
+  const testAction = {
+    payload: 'test'
+  }
+
+  it('signInSagaWorker c success true', () => {
+    const gen = signInSagaWorker(testAction)
+
+    expect(gen.next().value).toEqual(put(startSubmit('sign-in')))
+    expect(gen.next().value).toEqual(call(signInApi, testAction.payload))
+    const responseData = {
+      data: {
+        success: true,
+        token: 'test'
+      }
+    }
+    expect(gen.next(responseData).value).toEqual(
+      call(fetchCardData, responseData.data.token)
+    )
+    expect(gen.next(responseData).value).toEqual(
+      put(signInSuccess(responseData.data))
+    )
+    expect(gen.next().done).toEqual(true)
+  })
+
+  it('signInSagaWorker c success false', () => {
+    const gen = signInSagaWorker(testAction)
+
+    expect(gen.next().value).toEqual(put(startSubmit('sign-in')))
+    expect(gen.next().value).toEqual(call(signInApi, testAction.payload))
+    const responseData = {
+      data: {
+        success: false,
+        error: 'test'
+      }
+    }
+    expect(gen.next(responseData).value).toEqual(
+      put(
+        stopSubmit('sign-in', {
+          email: 'Неверный email или пароль',
+          password: 'Неверный email или пароль',
+          _error: responseData.data.error
+        })
+      )
+    )
+    expect(gen.next(responseData).value).toEqual(
+      put(signInFailure(responseData.data.error))
+    )
+    expect(gen.next().done).toEqual(true)
+  })
+
+  it('signInSagaWorker заканчивает работу с проблемой сети', () => {
+    const error = new Error('error')
+    const gen = signInSagaWorker(testAction)
+
+    expect(gen.next().value).toEqual(put(startSubmit('sign-in')))
+    expect(gen.next().value).toEqual(call(signInApi, testAction.payload))
+    expect(gen.throw(error).value).toEqual(
+      put(
+        stopSubmit('sign-in', {
+          email: 'Ошибка сети',
+          password: 'Ошибка сети',
+          _error: error
+        })
+      )
+    )
+    expect(gen.next().value).toEqual(put(signInFailure(error)))
+    expect(gen.next().done).toEqual(true)
+  })
+})
+
+describe('Тестирование fetchCardData саги', () => {
+  it('Удачное исполннение', () => {
+    const token = 'test'
+    const gen = fetchCardData(token)
+
+    expect(gen.next().value).toEqual(call(getProfileApi, token))
+    const responseData = {
+      data: {
+        success: true,
+        id: 123
+      }
+    }
+    expect(gen.next(responseData).value).toEqual(
+      put(profileSuccess(responseData.data))
+    )
+  })
+})
+
+describe('Тестирования api', () => {
+  beforeEach(() =>
+    mockAxios.post.mockImplementationOnce(() =>
+      Promise.resolve({
+        success: true,
+        token: 123
+      })
+    )
+  )
+
+  it('Проверка правильной работы signInApi', async () => {
+    const user = {
+      email: 'test@test.com',
+      password: '123123'
+    }
+    const data = await signInApi(user)
+
+    expect(data.success).toBe(true)
+    expect(data.token).toBe(123)
+    expect(mockAxios.post).toHaveBeenCalledTimes(1)
+    expect(mockAxios.post).toHaveBeenCalledWith(
+      `${process.env.baseURL}/auth`,
+      user
+    )
+  })
+
+  it('Проверка правильной работы signUpApi', async () => {
+    const user = {
+      email: 'test@test.com',
+      name: 'test name',
+      surname: 'test surname',
+      password: '123123'
+    }
+    const data = await signUpApi(user)
+
+    expect(data.success).toBe(true)
+    expect(data.token).toBe(123)
+    expect(mockAxios.post).toHaveBeenCalledTimes(2)
+    expect(mockAxios.post).toHaveBeenCalledWith(
+      `${process.env.baseURL}/register`,
+      user
+    )
+  })
+})
